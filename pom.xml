@@ -14,7 +14,7 @@
         <url>https://www.mesilat.com/confluence-fields.html</url>
     </organization>
     <name>Blueprint Validation Demo Companion</name>
-        <description>This is a companion plugin for </description>
+        <description>This is a companion plugin for Blueprint Validation Demo (https://github.com/mesilat/blueprint-validation-demo)</description>
     <packaging>atlassian-plugin</packaging>
     <dependencies>
         <dependency>
