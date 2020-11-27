@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema metamodelVersion="4.0" name="Cube Default">
+  <PhysicalSchema>
+    <Query alias="ISSUES" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          jiraissue.ID,
+          jiraissue.issuenum as ISSUENUM,
+          project.pkey as PROJECTKEY,
+          concat(project.pkey, '-', jiraissue.issuenum) as ISSUEKEY,
+          jiraissue.SUMMARY,
+          jiraissue.ASSIGNEE,
+          jiraissue.REPORTER,
+          jiraissue.PROJECT as PROJECTID,
+          DATE(jiraissue.CREATED) as CREATED,
+          DATE(jiraissue.UPDATED) as UPDATED,
+          DATE(jiraissue.DUEDATE) as DUE,
+          DATE(jiraissue.RESOLUTIONDATE) as RESOLVED,
+          COALESCE(jiraissue.issuetype,   '-1') as TYPEID,
+          COALESCE(jiraissue.issuestatus, '-1') as STATUSID,
+          COALESCE(jiraissue.PRIORITY,    '-1') as PRIORITYID,
+          COALESCE(jiraissue.RESOLUTION,  '-1') as RESOLUTIONID,
+          COALESCE(jiraissue.TIMEORIGINALESTIMATE, 0) / 3600 as ESTIMATED,
+          COALESCE(jiraissue.TIMESPENT, 0) / 3600 as TIMESPENT,
+          (COALESCE(jiraissue.TIMEESTIMATE, 0) - COALESCE(jiraissue.TIMESPENT, 0)) / 3600 as REMAINING
+          FROM
+          jiraissue INNER JOIN project ON jiraissue.PROJECT = project.ID]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="PROJECTS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          project.ID as "id",
+          project.pkey as "projectkey",
+          project.pname as "name",
+          project.PROJECTTYPE as "projecttype"
+          FROM project]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="USERS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          cwd_user.ID as "id",
+          cwd_user.user_name as "username",
+          cwd_user.display_name as "displayname",
+          cwd_user.email_address as "email"
+          FROM cwd_user]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUETYPES" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          issuetype.ID,
+          issuetype.pname as NAME
+          FROM
+          issuetype
+          UNION
+          SELECT '-1', 'Undefined']]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUESTATUSES" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          issuestatus.ID,
+          issuestatus.pname as NAME
+          FROM
+          issuestatus
+          UNION
+          SELECT '-1', 'Undefined']]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUEPRIORITIES" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          priority.ID,
+          priority.pname as NAME
+          FROM
+          priority
+          UNION SELECT '-1', 'Undefined']]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUERESOLUTIONS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          resolution.ID,
+          resolution.pname as NAME
+          FROM
+          resolution
+          UNION SELECT '-1', 'Undefined']]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUEDATES" keyColumn="issuedate">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT DISTINCT
+          DATE(CREATED) as ISSUEDATE,
+          TO_CHAR(CREATED,'YYYY') as YEAR,
+          TO_CHAR(CREATED,'Mon') as MONTH,
+          TO_CHAR(CREATED,'MM') as MONTHNO,
+          TO_CHAR(CREATED,'Mon DD') as DAY,
+          TO_CHAR(CREATED,'DD') as DAYNO
+          FROM jiraissue WHERE CREATED is NOT NULL
+          UNION
+          SELECT DISTINCT
+          DATE(UPDATED),
+          TO_CHAR(UPDATED,'YYYY'),
+          TO_CHAR(UPDATED,'Mon'),
+          TO_CHAR(UPDATED,'MM'),
+          TO_CHAR(UPDATED,'Mon DD'),
+          TO_CHAR(UPDATED,'DD')
+          FROM jiraissue WHERE UPDATED is NOT NULL
+          UNION
+          SELECT DISTINCT
+          DATE(DUEDATE),
+          TO_CHAR(DUEDATE, 'YYYY'),
+          TO_CHAR(DUEDATE, 'Mon'),
+          TO_CHAR(DUEDATE, 'MM'),
+          TO_CHAR(DUEDATE, 'Mon DD'),
+          TO_CHAR(DUEDATE, 'DD')
+          FROM jiraissue WHERE DUEDATE is NOT NULL
+          UNION
+          SELECT DISTINCT
+          DATE(RESOLUTIONDATE),
+          TO_CHAR(RESOLUTIONDATE, 'YYYY'),
+          TO_CHAR(RESOLUTIONDATE, 'Mon'),
+          TO_CHAR(RESOLUTIONDATE, 'MM'),
+          TO_CHAR(RESOLUTIONDATE, 'Mon DD'),
+          TO_CHAR(RESOLUTIONDATE, 'DD')
+          FROM jiraissue WHERE RESOLUTIONDATE is NOT NULL]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="LOGDATES" keyColumn="logdate">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT DISTINCT
+          DATE(STARTDATE) as LOGDATE,
+          TO_CHAR(STARTDATE,'YYYY') as YEAR,
+          TO_CHAR(STARTDATE,'Mon') as MONTH,
+          TO_CHAR(STARTDATE,'MM') as MONTHNO,
+          TO_CHAR(STARTDATE,'Mon DD') as DAY,
+          TO_CHAR(STARTDATE,'DD') as DAYNO
+          FROM worklog
+          UNION
+          SELECT DISTINCT
+          DATE(CREATED),
+          TO_CHAR(CREATED,'YYYY'),
+          TO_CHAR(CREATED,'Mon'),
+          TO_CHAR(CREATED,'MM'),
+          TO_CHAR(CREATED,'Mon DD'),
+          TO_CHAR(CREATED,'DD')
+          FROM worklog]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="WORKLOG">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          jiraissue.ID,
+          concat(project.pkey, '-', jiraissue.issuenum) as ISSUEKEY,
+          jiraissue.PROJECT as PROJECTID,
+          COALESCE(jiraissue.issuetype, '-1') as TYPEID,
+          app_user.lower_user_name as AUTHOR,
+          DATE(worklog.CREATED) as CREATED,
+          DATE(worklog.STARTDATE) as STARTED,
+          cube."TIME_WORKED" / 3600 as TIMEWORKED,
+          cube.cf_10603_id, cube.cf_10602_id, cube.cf_10604_id
+          FROM
+          jiraissue
+          INNER JOIN project ON jiraissue.PROJECT = project.ID
+          INNER JOIN worklog ON jiraissue.ID = worklog.issueid
+          INNER JOIN "AO_9417FD_WORKLOG_CUBE" cube ON jiraissue.ID = cube."ISSUE_ID" and worklog.id = cube."LOG_ID"
+          INNER JOIN app_user ON app_user.user_key = worklog.author]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="ISSUELABELS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          jiraissue.ID,
+          concat(project.pkey, '-', jiraissue.issuenum) as ISSUEKEY,
+          jiraissue.PROJECT as PROJECTID,
+          COALESCE(label.LABEL, 'No Label') as LABEL
+          FROM
+          jiraissue
+          INNER JOIN project ON jiraissue.PROJECT = project.ID
+          LEFT OUTER JOIN label ON label.ISSUE = jiraissue.ID]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="CLIENTS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          "ID" as id,
+          "TITLE" as title,
+          "COUNTRY" as country
+          FROM "AO_2CAE32_COMPANY"]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="CONTRACTS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          "ID" as id,
+          "CONTRACT_NUMBER" as contract_number,
+          "BUSINESS_UNIT" as business_unit
+          FROM "AO_2CAE32_CONTRACT"]]></SQL>
+      </ExpressionView>
+    </Query>
+
+    <Query alias="PRODUCTS" keyColumn="id">
+      <ExpressionView>
+        <SQL dialect="postgresql"><![CDATA[SELECT
+          "ID" as id,
+          "TITLE" as title,
+          "CATEGORY" as category
+          FROM "AO_2CAE32_PRODUCT"]]></SQL>
+      </ExpressionView>
+    </Query>
+  </PhysicalSchema>
+
+
+  <Dimension name="LogDate" table="LOGDATES" type="TIME" key="Day">
+    <Attributes>
+      <Attribute name="Year" hasHierarchy="false" keyColumn="year" levelType="TimeYears" />
+      <Attribute name="Month" hasHierarchy="false" nameColumn="month" levelType="TimeMonths" orderByColumn="monthno">
+        <Key>
+          <Column name="year" />
+          <Column name="monthno" />
+        </Key>
+      </Attribute>
+      <Attribute name="Day" hasHierarchy="false" keyColumn="logdate" nameColumn="day" levelType="TimeDays" orderByColumn="dayno" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Date" allLevelName="(All Dates)">
+        <Level attribute="Year" />
+        <Level attribute="Month" />
+        <Level attribute="Day" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="IssueDate" table="ISSUEDATES" type="TIME" key="Day">
+    <Attributes>
+      <Attribute name="Year" hasHierarchy="false" keyColumn="year" levelType="TimeYears" />
+      <Attribute name="Month" hasHierarchy="false" nameColumn="month" levelType="TimeMonths" orderByColumn="monthno">
+        <Key>
+          <Column name="year" />
+          <Column name="monthno" />
+        </Key>
+      </Attribute>
+      <Attribute name="Day" hasHierarchy="false" keyColumn="issuedate" nameColumn="day" levelType="TimeDays" orderByColumn="dayno" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Date" allLevelName="(All Dates)">
+        <Level attribute="Year" />
+        <Level attribute="Month" />
+        <Level attribute="Day" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="User" table="USERS" key="User">
+    <Attributes>
+      <Attribute name="User" keyColumn="username" nameColumn="displayname" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Users" allMemberName="All Users">
+        <Level attribute="User" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Project" table="PROJECTS" key="Project Name">
+    <Attributes>
+      <Attribute name="Project Name" keyColumn="id" nameColumn="name" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Projects" allMemberName="All Projects">
+        <Level attribute="Project Name" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Priority" table="ISSUEPRIORITIES" key="Priority">
+    <Attributes>
+      <Attribute name="Priority" keyColumn="id" nameColumn="name" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Priorities" allMemberName="All Priorities">
+        <Level attribute="Priority" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Type" table="ISSUETYPES" key="Issue Type">
+    <Attributes>
+      <Attribute name="Issue Type" keyColumn="id" nameColumn="name" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Issue Types" allMemberName="All Types">
+        <Level attribute="Issue Type" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Status" table="ISSUESTATUSES" key="Issue Status">
+    <Attributes>
+      <Attribute name="Issue Status" keyColumn="id" nameColumn="name" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Issue Statuses" allMemberName="All Statuses">
+        <Level attribute="Issue Status" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Resolution" table="ISSUERESOLUTIONS" key="Issue Resolution">
+    <Attributes>
+      <Attribute name="Issue Resolution" keyColumn="id" nameColumn="name" hasHierarchy="false"/>
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Issue Resolutions" allMemberName="All Resolutions">
+        <Level attribute="Issue Resolution" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Issue" table="ISSUES" key="Issue ID">
+    <Attributes>
+      <Attribute name="Issue ID" keyColumn="id" hasHierarchy="false" />
+      <Attribute name="Project Key" keyColumn="projectkey" hasHierarchy="false" />
+      <Attribute name="Issue Key" keyColumn="issuekey" hasHierarchy="false" orderByColumn="issuenum" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Issue">
+        <Level attribute="Project Key" />
+        <Level attribute="Issue Key" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="IssueLabel" table="ISSUELABELS" key="ID">
+    <Attributes>
+      <Attribute name="ID" keyColumn="id" hasHierarchy="false" />
+      <Attribute name="Issue Key" keyColumn="issuekey" hierarchyAllLevelName="(All Issues)" />
+      <Attribute name="Label" keyColumn="label" hierarchyAllLevelName="(All Labels)" />
+    </Attributes>
+  </Dimension>
+
+  <Dimension name="Client" table="CLIENTS" key="Client">
+    <Attributes>
+      <Attribute name="Client" keyColumn="id" nameColumn="title" hasHierarchy="false" />
+      <Attribute name="Country" keyColumn="country" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Client" allMemberName="All Clients">
+        <Level attribute="Client" />
+      </Hierarchy>
+      <Hierarchy name="Country &gt; Client" allMemberName="All Clients">
+        <Level attribute="Country" />
+        <Level attribute="Client" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Contracts" table="CONTRACTS" key="Contract">
+    <Attributes>
+      <Attribute name="Contract" keyColumn="id" nameColumn="contract_number" hasHierarchy="false" />
+      <Attribute name="Busyness Unit" keyColumn="business_unit" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Contract" allMemberName="All Contracts">
+        <Level attribute="Contract" />
+      </Hierarchy>
+      <Hierarchy name="Busyness Unit &gt; Contract" allMemberName="All Contracts">
+        <Level attribute="Busyness Unit" />
+        <Level attribute="Contract" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Dimension name="Products" table="PRODUCTS" key="Product">
+    <Attributes>
+      <Attribute name="Product" keyColumn="id" nameColumn="title" hasHierarchy="false" />
+      <Attribute name="Category" keyColumn="category" hasHierarchy="false" />
+    </Attributes>
+    <Hierarchies>
+      <Hierarchy name="Product" allMemberName="All Products">
+        <Level attribute="Product" />
+      </Hierarchy>
+      <Hierarchy name="Category &gt; Product" allMemberName="All Products">
+        <Level attribute="Category" />
+        <Level attribute="Product" />
+      </Hierarchy>
+    </Hierarchies>
+  </Dimension>
+
+  <Cube name="Worklog">
+    <Dimensions>
+      <Dimension source="Issue" />
+      <Dimension source="Project" />
+      <Dimension source="Type" />
+      <Dimension source="User" name="Worker" />
+      <Dimension source="LogDate" name="Created" />
+      <Dimension source="LogDate" name="Start" />
+      <Dimension source="Clients" />
+      <Dimension source="Contracts" />
+      <Dimension source="Products" />
+    </Dimensions>
+    <MeasureGroups>
+      <MeasureGroup table="WORKLOG">
+        <Measures>
+          <Measure aggregator="count" column="id" name="Worklogs count" />
+          <Measure aggregator="sum" column="timeworked" name="Time Spent" />
+        </Measures>
+        <DimensionLinks>
+          <ForeignKeyLink dimension="Issue" foreignKeyColumn="id" />
+          <ForeignKeyLink dimension="Project" foreignKeyColumn="projectid" />
+          <ForeignKeyLink dimension="Type" foreignKeyColumn="typeid" />
+          <ForeignKeyLink dimension="Worker" foreignKeyColumn="author" />
+          <ForeignKeyLink dimension="Created" foreignKeyColumn="created" />
+          <ForeignKeyLink dimension="Start" foreignKeyColumn="started" />
+          <ForeignKeyLink dimension="Clients" foreignKeyColumn="cf_10603_id" />
+          <ForeignKeyLink dimension="Contracts" foreignKeyColumn="cf_10602_id" />
+          <ForeignKeyLink dimension="Products" foreignKeyColumn="cf_10604_id" />
+        </DimensionLinks>
+      </MeasureGroup>
+    </MeasureGroups>
+  </Cube>
+</Schema>

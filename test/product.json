@@ -1,0 +1,12 @@
+{
+  "category" : "Software development",
+  "manager" : {
+    "_type" : "user",
+    "key" : "2c93808374ca15000174ca1b2a200000",
+    "fullName" : "Administrator",
+    "name" : "admin"
+  },
+  "description" : "Oracle killer database",
+  "id" : 3080201,
+  "title" : "Product Three"
+}
